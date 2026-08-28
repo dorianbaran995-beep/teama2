@@ -23,14 +23,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Apply Team A login visibility fix
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          marker = '<style>'
+          fix = '<style>\n    #lockScreen[hidden]{display:none!important}\n'
+          if '#lockScreen[hidden]{display:none!important}' not in s:
+              s = s.replace(marker, fix, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v4
         with:
           path: "."
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
