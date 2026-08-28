@@ -8,7 +8,19 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="app-shell">
+  <div id="lockScreen" class="lock-screen">
+    <form id="lockForm" class="lock-card">
+      <div class="brand-mark large">A</div>
+      <p class="eyebrow">TEAM A</p>
+      <h1>Private team area</h1>
+      <p>Enter the team password to continue.</p>
+      <label>Password<input id="teamPassword" type="password" inputmode="numeric" autocomplete="current-password" required autofocus></label>
+      <div id="lockMessage" class="form-message"></div>
+      <button class="btn primary full" type="submit">Enter Team A</button>
+    </form>
+  </div>
+
+  <div id="appRoot" class="app-shell" hidden>
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-mark">A</div>
@@ -22,7 +34,7 @@
       </nav>
       <div class="sidebar-footer">
         <div class="tiny">DATABASE</div>
-        <strong id="dbStatus">Connecting…</strong>
+        <strong id="dbStatus">Connected</strong>
       </div>
     </aside>
 
@@ -30,25 +42,19 @@
       <header class="topbar">
         <div><p class="eyebrow">TEAM A</p><h1 id="pageTitle">Calendar</h1></div>
         <div class="top-actions">
-          <span id="userBadge" class="user-badge"></span>
-          <button id="logoutBtn" class="btn secondary" hidden>Log out</button>
+          <button id="lockBtn" class="btn secondary">Lock</button>
           <button id="primaryAction" class="btn primary">+ Add event</button>
         </div>
       </header>
 
       <main>
-        <section id="setupNotice" class="setup-notice" hidden>
-          <strong>Database configuration required</strong>
-          <span>Add your Supabase Project URL and anon key to <code>config.js</code>, then run <code>supabase.sql</code> in Supabase SQL Editor.</span>
-        </section>
-
         <section id="calendar" class="tab-panel active">
           <div class="toolbar">
             <div><p class="section-label">SHARED CALENDAR</p><h2 id="monthLabel"></h2></div>
             <div class="toolbar-actions">
-              <button id="prevMonth" class="btn icon" aria-label="Previous month">←</button>
+              <button id="prevMonth" class="btn icon">←</button>
               <button id="todayBtn" class="btn secondary">Today</button>
-              <button id="nextMonth" class="btn icon" aria-label="Next month">→</button>
+              <button id="nextMonth" class="btn icon">→</button>
             </div>
           </div>
           <div class="calendar-card">
@@ -84,68 +90,46 @@
         </section>
 
         <section id="team" class="tab-panel">
-          <div class="toolbar">
-            <div><p class="section-label">TEAM MEMBERS</p><h2>8 people</h2></div>
-          </div>
+          <div class="toolbar"><div><p class="section-label">TEAM MEMBERS</p><h2>8 people</h2></div></div>
           <div id="teamGrid" class="team-grid"></div>
-          <div class="info-box"><strong>Shared Team A workspace</strong><span>All authenticated members use the same Supabase database.</span></div>
+          <div class="info-box"><strong>Shared Team A workspace</strong><span>Everyone using the team password sees and updates the same calendar, holidays and travel offers.</span></div>
         </section>
       </main>
     </div>
   </div>
 
-  <dialog id="authDialog">
-    <form id="authForm">
-      <div class="dialog-head"><div><p class="section-label">TEAM A</p><h3>Sign in</h3></div></div>
-      <p class="form-help">Use your Team A account. New team members can create an account if sign-ups are enabled in Supabase.</p>
-      <label>Email<input id="authEmail" type="email" autocomplete="email" required></label>
-      <label>Password<input id="authPassword" type="password" autocomplete="current-password" minlength="6" required></label>
-      <div id="authMessage" class="form-message"></div>
-      <div class="dialog-actions auth-actions">
-        <button type="button" id="signupBtn" class="btn secondary">Create account</button>
-        <button type="submit" class="btn primary">Sign in</button>
-      </div>
-    </form>
-  </dialog>
+  <dialog id="eventDialog"><form id="eventForm">
+    <input id="eventId" type="hidden">
+    <div class="dialog-head"><div><p class="section-label">CALENDAR</p><h3 id="eventDialogTitle">Add event</h3></div><button type="button" class="close" data-close="eventDialog">×</button></div>
+    <label>Event title<input id="eventTitle" required maxlength="80"></label>
+    <div class="form-grid"><label>Date<input id="eventDate" type="date" required></label><label>Time<input id="eventTime" type="time"></label></div>
+    <label>Team member<select id="eventPerson"></select></label>
+    <label>Notes<textarea id="eventNotes" rows="3" maxlength="300"></textarea></label>
+    <div class="dialog-actions"><button type="button" class="btn secondary" data-close="eventDialog">Cancel</button><button class="btn primary">Save event</button></div>
+  </form></dialog>
 
-  <dialog id="eventDialog">
-    <form id="eventForm">
-      <input id="eventId" type="hidden">
-      <div class="dialog-head"><div><p class="section-label">CALENDAR</p><h3 id="eventDialogTitle">Add event</h3></div><button type="button" class="close" data-close="eventDialog">×</button></div>
-      <label>Event title<input id="eventTitle" required maxlength="80" placeholder="e.g. Team dinner"></label>
-      <div class="form-grid"><label>Date<input id="eventDate" type="date" required></label><label>Time<input id="eventTime" type="time"></label></div>
-      <label>Team member<select id="eventPerson"></select></label>
-      <label>Notes<textarea id="eventNotes" rows="3" maxlength="300" placeholder="Optional"></textarea></label>
-      <div class="dialog-actions"><button type="button" class="btn secondary" data-close="eventDialog">Cancel</button><button type="submit" class="btn primary">Save event</button></div>
-    </form>
-  </dialog>
+  <dialog id="holidayDialog"><form id="holidayForm">
+    <input id="holidayId" type="hidden">
+    <div class="dialog-head"><div><p class="section-label">HOLIDAY</p><h3 id="holidayDialogTitle">Add holiday</h3></div><button type="button" class="close" data-close="holidayDialog">×</button></div>
+    <label>Team member<select id="holidayPerson" required></select></label>
+    <div class="form-grid"><label>From<input id="holidayFrom" type="date" required></label><label>To<input id="holidayTo" type="date" required></label></div>
+    <label>Note<input id="holidayNote" maxlength="100"></label>
+    <div class="dialog-actions"><button type="button" class="btn secondary" data-close="holidayDialog">Cancel</button><button class="btn primary">Save holiday</button></div>
+  </form></dialog>
 
-  <dialog id="holidayDialog">
-    <form id="holidayForm">
-      <input id="holidayId" type="hidden">
-      <div class="dialog-head"><div><p class="section-label">HOLIDAY</p><h3 id="holidayDialogTitle">Add holiday</h3></div><button type="button" class="close" data-close="holidayDialog">×</button></div>
-      <label>Team member<select id="holidayPerson" required></select></label>
-      <div class="form-grid"><label>From<input id="holidayFrom" type="date" required></label><label>To<input id="holidayTo" type="date" required></label></div>
-      <label>Note<input id="holidayNote" maxlength="100" placeholder="Optional"></label>
-      <div class="dialog-actions"><button type="button" class="btn secondary" data-close="holidayDialog">Cancel</button><button type="submit" class="btn primary">Save holiday</button></div>
-    </form>
-  </dialog>
-
-  <dialog id="offerDialog">
-    <form id="offerForm">
-      <input id="offerId" type="hidden">
-      <div class="dialog-head"><div><p class="section-label">HOLIDAY OFFER</p><h3 id="offerDialogTitle">Add offer</h3></div><button type="button" class="close" data-close="offerDialog">×</button></div>
-      <div class="form-grid"><label>Country<input id="offerCountry" required maxlength="60" placeholder="Spain"></label><label>Location<input id="offerLocation" maxlength="80" placeholder="Salou"></label></div>
-      <div class="form-grid"><label>Price / person (£)<input id="offerPrice" type="number" min="0" step="1" placeholder="400"></label><label>Departure date<input id="offerDate" type="date"></label></div>
-      <div class="form-grid"><label>Nights<input id="offerNights" type="number" min="1" max="60" value="7"></label><label>Board<input id="offerBoard" maxlength="60" placeholder="All Inclusive"></label></div>
-      <label>Offer link<input id="offerUrl" type="url" required placeholder="https://..."></label>
-      <label>Notes<textarea id="offerNotes" rows="3" maxlength="300" placeholder="Hotel, airport, room etc."></textarea></label>
-      <div class="dialog-actions"><button type="button" class="btn secondary" data-close="offerDialog">Cancel</button><button type="submit" class="btn primary">Save offer</button></div>
-    </form>
-  </dialog>
+  <dialog id="offerDialog"><form id="offerForm">
+    <input id="offerId" type="hidden">
+    <div class="dialog-head"><div><p class="section-label">HOLIDAY OFFER</p><h3 id="offerDialogTitle">Add offer</h3></div><button type="button" class="close" data-close="offerDialog">×</button></div>
+    <div class="form-grid"><label>Country<input id="offerCountry" maxlength="60" placeholder="Spain"></label><label>Destination<input id="offerDestination" required maxlength="80" placeholder="Salou"></label></div>
+    <div class="form-grid"><label>Price / person<input id="offerPrice" type="number" min="0" step="1" placeholder="400"></label><label>Currency<select id="offerCurrency"><option>GBP</option><option>EUR</option><option>USD</option></select></label></div>
+    <div class="form-grid"><label>Departure date<input id="offerDate" type="date"></label><label>Nights<input id="offerNights" type="number" min="1" max="60" value="7"></label></div>
+    <div class="form-grid"><label>Board<input id="offerBoard" maxlength="60" placeholder="All Inclusive"></label><label>Departure airport<input id="offerAirport" maxlength="60" placeholder="Stansted"></label></div>
+    <label>Offer link<input id="offerUrl" type="url" required placeholder="https://..."></label>
+    <label>Notes<textarea id="offerNotes" rows="3" maxlength="300"></textarea></label>
+    <div class="dialog-actions"><button type="button" class="btn secondary" data-close="offerDialog">Cancel</button><button class="btn primary">Save offer</button></div>
+  </form></dialog>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="config.js"></script>
-  <script type="module" src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
