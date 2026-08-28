@@ -51,7 +51,6 @@ async function unlock(password) {
   $('lockMessage').textContent = 'Checking…';
   try {
     await api('events');
-    sessionStorage.setItem('teama2-unlocked','1');
     lockScreen.hidden = true;
     appRoot.hidden = false;
     $('lockMessage').textContent = '';
@@ -164,7 +163,7 @@ $('prevMonth').onclick=()=>{currentMonth=new Date(currentMonth.getFullYear(),cur
 $('nextMonth').onclick=()=>{currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,1);renderCalendar();};
 $('todayBtn').onclick=()=>{const n=new Date();currentMonth=new Date(n.getFullYear(),n.getMonth(),1);renderCalendar();};
 $('addHolidayBtn').onclick=()=>openHoliday(); $('addOfferBtn').onclick=()=>openOffer();
-$('lockBtn').onclick=()=>{teamPassword='';sessionStorage.removeItem('teama2-unlocked');appRoot.hidden=true;lockScreen.hidden=false;$('teamPassword').value='';};
+$('lockBtn').onclick=()=>{teamPassword='';appRoot.hidden=true;lockScreen.hidden=false;$('teamPassword').value='';$('teamPassword').focus();};
 
 $('lockForm').addEventListener('submit',e=>{e.preventDefault();unlock($('teamPassword').value);});
 $('eventForm').addEventListener('submit',async e=>{e.preventDefault();const id=$('eventId').value;const body={title:$('eventTitle').value.trim(),event_date:$('eventDate').value,event_time:$('eventTime').value,person:$('eventPerson').value,notes:$('eventNotes').value.trim()};try{await api('events',id?'PATCH':'POST',body,id);eventDialog.close();await loadAll();toast(id?'Event updated':'Event added');}catch(err){toast(err.message);}});
