@@ -24,22 +24,121 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Refresh frontend asset versions
+      - name: Build separate login and workspace pages
         env:
           BUILD_SHA: ${{ github.sha }}
         run: |
           python - <<'PY'
           from pathlib import Path
           import os, re
+
           version = os.environ['BUILD_SHA'][:10]
-          p = Path('index.html')
-          html = p.read_text(encoding='utf-8')
-          html = re.sub(r'styles\.css\?v=[^"\']+', f'styles.css?v={version}', html)
-          html = re.sub(r'app\.js\?v=[^"\']+', f'app.js?v={version}', html)
-          if 'http-equiv="Cache-Control"' not in html:
-              html = html.replace('<meta name="viewport" content="width=device-width, initial-scale=1">', '<meta name="viewport" content="width=device-width, initial-scale=1">\n  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n  <meta http-equiv="Pragma" content="no-cache">\n  <meta http-equiv="Expires" content="0">')
-          p.write_text(html, encoding='utf-8')
-          print('Published asset version:', version)
+          api = 'https://uxkmgwofnewrdcixjpku.supabase.co/functions/v1/team-a-api'
+
+          source = Path('index.html').read_text(encoding='utf-8')
+
+          def version_assets(html):
+              html = re.sub(r'styles\.css\?v=[^"\']+', f'styles.css?v={version}', html)
+              html = re.sub(r'app\.js\?v=[^"\']+', f'app.js?v={version}', html)
+              if 'http-equiv="Cache-Control"' not in html:
+                  html = html.replace(
+                      '<meta name="viewport" content="width=device-width, initial-scale=1">',
+                      '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+                      '  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n'
+                      '  <meta http-equiv="Pragma" content="no-cache">\n'
+                      '  <meta http-equiv="Expires" content="0">'
+                  )
+              return html
+
+          # ------------------------------------------------------------
+          # LOGIN PAGE: contains the login UI only. The app remains hidden
+          # and app.js is NOT loaded here, so there is no competing unlock
+          # logic. A successful password check navigates to workspace.html.
+          # ------------------------------------------------------------
+          login = version_assets(source)
+          login_script = f'''<script>
+          (() => {{
+            const form = document.getElementById('lockForm');
+            const input = document.getElementById('teamPassword');
+            const message = document.getElementById('lockMessage');
+            const button = document.getElementById('loginButton');
+            const app = document.getElementById('appRoot');
+            if (app) app.remove();
+            if (!form) return;
+            form.addEventListener('submit', async (event) => {{
+              event.preventDefault();
+              const password = String(input?.value || '').trim();
+              if (!password) {{ message.textContent = 'Wpisz hasło 🙂'; return; }}
+              button.disabled = true;
+              button.textContent = 'Sprawdzam…';
+              message.textContent = '';
+              try {{
+                const url = new URL('{api}');
+                url.searchParams.set('kind', 'events');
+                const response = await fetch(url, {{
+                  method: 'GET',
+                  cache: 'no-store',
+                  headers: {{ 'Content-Type': 'application/json', 'x-team-password': password }}
+                }});
+                if (!response.ok) {{
+                  if (response.status === 401) throw new Error('Nieprawidłowe hasło');
+                  throw new Error('Nie udało się połączyć');
+                }}
+                sessionStorage.setItem('team-a-password', password);
+                window.location.replace('workspace.html?v={version}');
+              }} catch (error) {{
+                message.textContent = error.message === 'Nieprawidłowe hasło'
+                  ? 'Nope 😅 To nie jest hasło Team A.'
+                  : 'Nie udało się połączyć. Spróbuj ponownie.';
+                button.disabled = false;
+                button.textContent = 'Wchodzę →';
+                input?.select();
+              }}
+            }});
+          }})();
+          </script>'''
+          login = re.sub(r'<script src="app\.js\?v=[^"]+"></script>', login_script, login, count=1)
+          Path('index.html').write_text(login, encoding='utf-8')
+
+          # ------------------------------------------------------------
+          # WORKSPACE PAGE: physically contains NO login element.
+          # ------------------------------------------------------------
+          workspace = version_assets(source)
+          workspace = re.sub(
+              r'\s*<div id="lockScreen" class="lock-screen">.*?</form>\s*</div>\s*',
+              '\n',
+              workspace,
+              count=1,
+              flags=re.S
+          )
+          workspace = workspace.replace('<div id="appRoot" class="app-shell" hidden>', '<div id="appRoot" class="app-shell">')
+          workspace = workspace.replace('<title>Team A | Private Workspace</title>', '<title>Team A | Pulpit</title>')
+          Path('workspace.html').write_text(workspace, encoding='utf-8')
+
+          # ------------------------------------------------------------
+          # WORKSPACE JS: get password from this tab's session and load
+          # shared data automatically. Lock clears the session and returns
+          # to the physical login page.
+          # ------------------------------------------------------------
+          app_path = Path('app.js')
+          js = app_path.read_text(encoding='utf-8')
+          js = js.replace(
+              "let teamPassword = '';",
+              "let teamPassword = sessionStorage.getItem('team-a-password') || '';",
+              1
+          )
+          js = js.replace(
+              "window.location.replace(`${window.location.pathname}?locked=${Date.now()}`);",
+              "sessionStorage.removeItem('team-a-password'); window.location.replace(`./?locked=${Date.now()}`);",
+              1
+          )
+          bootstrap = '''\n\n// Workspace bootstrap: workspace.html has no login markup by design.\nif (!document.getElementById('lockScreen')) {\n  if (!teamPassword) {\n    window.location.replace('./');\n  } else {\n    loadAll(false).catch(() => toast('Nie udało się zsynchronizować wszystkich danych.'));\n    clearInterval(syncTimer);\n    syncTimer = setInterval(() => loadAll(true).catch(() => {}), 30000);\n  }\n}\n'''
+          js += bootstrap
+          app_path.write_text(js, encoding='utf-8')
+
+          print('Built Team A:', version)
+          print('index.html = login only')
+          print('workspace.html = workspace only, no lockScreen markup')
           PY
 
       - name: Setup Pages
