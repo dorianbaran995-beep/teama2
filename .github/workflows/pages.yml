@@ -34,17 +34,15 @@ jobs:
 
           version = os.environ.get('BUILD_SHA', 'fresh')[:10]
 
-          # INDEX: one language, deterministic visibility and real cache busting.
           index = Path('index.html')
           html = index.read_text(encoding='utf-8')
 
-          # Remove old deploy-time visibility injections if source ever contains them.
           html = re.sub(r'<style id="team-a-visibility-fix">.*?</style>\s*', '', html, flags=re.S)
+          html = re.sub(r'<script id="team-a-auth-guard">.*?</script>\s*', '', html, flags=re.S)
 
           visibility = '<style id="team-a-visibility-fix">[hidden]{display:none!important}html body #lockScreen[hidden]{display:none!important}html body #appRoot[hidden]{display:none!important}</style>'
           html = html.replace('</head>', visibility + '\n</head>', 1)
 
-          # Polish-facing copy cleanup.
           replacements = {
               'Private Workspace': 'Prywatna przestrzeń',
               'TEAM A · PRIVATE WORKSPACE': 'TEAM A · PRYWATNA PRZESTRZEŃ',
@@ -56,18 +54,40 @@ jobs:
           for old, new in replacements.items():
               html = html.replace(old, new)
 
-          # Every deployment gets unique assets so team-a.online cannot keep stale JS/CSS.
           html = re.sub(r'styles\.css\?v=[^"\']+', f'styles.css?v={version}', html)
           html = re.sub(r'app\.js\?v=[^"\']+', f'app.js?v={version}', html)
+
+          auth_guard = '''<script id="team-a-auth-guard">
+          (function(){
+            function boot(){
+              var app=document.getElementById('appRoot');
+              var login=document.getElementById('lockScreen');
+              if(!app) return;
+              function enforce(){
+                if(!app.hasAttribute('hidden')){
+                  if(login && login.isConnected) login.remove();
+                  app.style.removeProperty('display');
+                  document.documentElement.scrollTop=0;
+                  document.body.scrollTop=0;
+                }
+              }
+              enforce();
+              new MutationObserver(enforce).observe(app,{attributes:true,attributeFilter:['hidden']});
+              var form=document.getElementById('lockForm');
+              if(form) form.addEventListener('submit',function(){setTimeout(enforce,0);setTimeout(enforce,250);setTimeout(enforce,1000);},true);
+              var lock=document.getElementById('lockBtn');
+              if(lock) lock.addEventListener('click',function(e){e.preventDefault();e.stopImmediatePropagation();location.reload();},true);
+            }
+            if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+          })();
+          </script>'''
+          html = html.replace('</body>', auth_guard + '\n</body>', 1)
           index.write_text(html, encoding='utf-8')
 
-          # APP: two mutually exclusive states. After successful password validation
-          # the login element is removed from DOM completely. Lock = reload clean state.
           app = Path('app.js')
           js = app.read_text(encoding='utf-8')
-
           old_unlock = "    lockScreen.hidden=true;\n    appRoot.hidden=false;"
-          new_unlock = "    lockScreen.remove();\n    appRoot.hidden=false;\n    appRoot.style.removeProperty('display');"
+          new_unlock = "    if(lockScreen && lockScreen.isConnected) lockScreen.remove();\n    appRoot.hidden=false;\n    appRoot.style.removeProperty('display');\n    window.scrollTo(0,0);"
           if old_unlock not in js:
               raise SystemExit('Expected unlock block not found in app.js')
           js = js.replace(old_unlock, new_unlock, 1)
@@ -79,14 +99,13 @@ jobs:
           js = js.replace(old_lock, new_lock, 1)
           app.write_text(js, encoding='utf-8')
 
-          # VISUAL REVIEW: lift tiny admin-style typography to premium workspace scale.
           css = Path('styles.css')
           style = css.read_text(encoding='utf-8')
           style += '''\n\n/* Team A production review overrides */\n.nav-item{font-size:13px;min-height:46px}\n.brand small,.logo-copy small{font-size:12px}\n.topbar p,.overview-date{font-size:13px}\n.eyebrow,.top-kicker{font-size:11px}\n.summary-card span{font-size:10px}\n.summary-card small{font-size:12px}\n.timeline-copy strong,.compact-trip strong,.event-copy strong{font-size:13px}\n.timeline-copy span,.compact-trip small,.event-copy span{font-size:12px}\n.timeline-date span,.event-date span{font-size:10px}\n.weekdays span{font-size:11px}\n.day-number{font-size:13px}\n.event-chip{font-size:11px;padding:7px 8px}\n.offer-topline{font-size:10px}\n.offer-main p,.offer-notes{font-size:12px}\n.offer-info span,.offer-footer .btn{font-size:11px}\n.offer-price span,.offer-price small{font-size:9px}\n.text-link,.member-count,.sidebar-lock{font-size:12px}\n.online-row{font-size:12px}\n@media (min-width:1100px){main{padding:34px 38px 80px}.summary-card{padding:20px}.panel{padding:22px}.offer-card{padding:20px}}\n'''
           css.write_text(style, encoding='utf-8')
 
           print(f'Built Team A version {version}')
-          print('Login state: DOM removal after unlock')
+          print('Login state: DOM removal enforced by app + inline guard')
           print('Assets: cache-busted per deployment')
           PY
 
