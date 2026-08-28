@@ -24,32 +24,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Apply Team A login visibility fix
+      - name: Apply deterministic Team A login fix
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          # 1) CSS hard fallback: [hidden] must always win over the login's display:grid!important.
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-          marker = '<style>'
-          fix = '<style>\n    #lockScreen[hidden]{display:none!important}\n'
-          if '#lockScreen[hidden]{display:none!important}' not in s:
-              s = s.replace(marker, fix, 1)
-          p.write_text(s, encoding='utf-8')
+          index = Path('index.html')
+          html = index.read_text(encoding='utf-8')
+          hard_rule = '<style id="team-a-visibility-fix">html body #lockScreen[hidden]{display:none!important}html body #appRoot[hidden]{display:none!important}</style>'
+          if 'team-a-visibility-fix' not in html:
+              html = html.replace('</head>', hard_rule + '\n</head>', 1)
+          index.write_text(html, encoding='utf-8')
 
-          # 2) JavaScript hard fallback: physically remove the login from layout after a valid password.
-          j = Path('app.js')
-          a = j.read_text(encoding='utf-8')
-          a = a.replace(
-              "lockScreen.hidden=true;\n    appRoot.hidden=false;",
-              "lockScreen.hidden=true;\n    lockScreen.style.setProperty('display','none','important');\n    appRoot.hidden=false;"
+          app = Path('app.js')
+          js = app.read_text(encoding='utf-8')
+          js = js.replace(
+              'lockScreen.hidden=true;\n    appRoot.hidden=false;',
+              "lockScreen.hidden=true;\n    lockScreen.style.setProperty('display','none','important');\n    appRoot.hidden=false;\n    appRoot.style.removeProperty('display');"
           )
-          a = a.replace(
+          js = js.replace(
               "appRoot.hidden=true;lockScreen.hidden=false;$('teamPassword').value='';",
-              "appRoot.hidden=true;lockScreen.hidden=false;lockScreen.style.removeProperty('display');$('teamPassword').value='';"
+              "appRoot.hidden=true;appRoot.style.setProperty('display','none','important');lockScreen.hidden=false;lockScreen.style.removeProperty('display');$('teamPassword').value='';"
           )
-          j.write_text(a, encoding='utf-8')
+          app.write_text(js, encoding='utf-8')
           PY
 
       - name: Setup Pages
