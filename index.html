@@ -3,20 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0f172a">
-  <title>Team A</title>
+  <meta name="theme-color" content="#0b1220">
+  <meta name="description" content="Team A — wspólny kalendarz, urlopy i oferty wakacyjne zespołu.">
+  <title>Team A | Panel zespołu</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div id="lockScreen" class="lock-screen">
     <form id="lockForm" class="lock-card">
-      <div class="brand-mark large">A</div>
+      <div class="lock-brand"><div class="brand-mark large">A</div><span class="premium-badge">TEAM WORKSPACE</span></div>
       <p class="eyebrow">TEAM A</p>
-      <h1>Private team area</h1>
-      <p>Enter the team password to continue.</p>
-      <label>Password<input id="teamPassword" type="password" inputmode="numeric" autocomplete="current-password" required autofocus></label>
+      <h1>Prywatna strefa zespołu</h1>
+      <p class="lock-description">Wpisz hasło zespołu, aby uzyskać dostęp do wspólnego kalendarza, urlopów i ofert wakacyjnych.</p>
+      <label>Hasło zespołu<input id="teamPassword" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Wpisz hasło" required autofocus></label>
       <div id="lockMessage" class="form-message"></div>
-      <button class="btn primary full" type="submit">Enter Team A</button>
+      <button class="btn primary full large-btn" type="submit">Wejdź do Team A</button>
+      <div class="secure-note"><span>●</span> Dostęp chroniony · dane synchronizowane w chmurze</div>
     </form>
   </div>
 
@@ -24,75 +26,82 @@
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-mark">A</div>
-        <div><strong>Team A</strong><span>Shared workspace</span></div>
+        <div><strong>Team A</strong><span>Panel zespołu</span></div>
       </div>
-      <nav class="nav" aria-label="Main navigation">
-        <button class="nav-item active" data-tab="calendar"><span>▦</span> Calendar</button>
-        <button class="nav-item" data-tab="holiday"><span>☀</span> Holiday</button>
-        <button class="nav-item" data-tab="offers"><span>✈</span> Holiday Offers</button>
-        <button class="nav-item" data-tab="team"><span>👥</span> Team</button>
+
+      <div class="workspace-label">PRZESTRZEŃ ROBOCZA</div>
+      <nav class="nav" aria-label="Główna nawigacja">
+        <button class="nav-item active" data-tab="calendar"><span class="nav-icon">▦</span><span>Kalendarz</span></button>
+        <button class="nav-item" data-tab="holiday"><span class="nav-icon">☀</span><span>Urlopy</span></button>
+        <button class="nav-item" data-tab="offers"><span class="nav-icon">✈</span><span>Oferty wakacyjne</span></button>
+        <button class="nav-item" data-tab="team"><span class="nav-icon">👥</span><span>Zespół</span></button>
       </nav>
+
       <div class="sidebar-footer">
-        <div class="tiny">DATABASE</div>
-        <strong id="dbStatus">Connected</strong>
+        <div class="connection-row"><span class="status-dot"></span><div><div class="tiny">BAZA DANYCH</div><strong id="dbStatus">Połączono</strong></div></div>
+        <div class="team-size">8 osób · wspólne dane</div>
       </div>
     </aside>
 
     <div class="main-wrap">
       <header class="topbar">
-        <div><p class="eyebrow">TEAM A</p><h1 id="pageTitle">Calendar</h1></div>
+        <div class="page-heading">
+          <p class="eyebrow">TEAM A · WORKSPACE</p>
+          <h1 id="pageTitle">Kalendarz</h1>
+          <p id="pageSubtitle" class="page-subtitle">Wspólny harmonogram wydarzeń zespołu</p>
+        </div>
         <div class="top-actions">
-          <button id="lockBtn" class="btn secondary">Lock</button>
-          <button id="primaryAction" class="btn primary">+ Add event</button>
+          <button id="lockBtn" class="btn secondary">🔒 Zablokuj</button>
+          <button id="primaryAction" class="btn primary">+ Dodaj wydarzenie</button>
         </div>
       </header>
 
       <main>
         <section id="calendar" class="tab-panel active">
           <div class="toolbar">
-            <div><p class="section-label">SHARED CALENDAR</p><h2 id="monthLabel"></h2></div>
+            <div><p class="section-label">WSPÓLNY KALENDARZ</p><h2 id="monthLabel"></h2></div>
             <div class="toolbar-actions">
-              <button id="prevMonth" class="btn icon">←</button>
-              <button id="todayBtn" class="btn secondary">Today</button>
-              <button id="nextMonth" class="btn icon">→</button>
+              <button id="prevMonth" class="btn icon" aria-label="Poprzedni miesiąc">←</button>
+              <button id="todayBtn" class="btn secondary">Dzisiaj</button>
+              <button id="nextMonth" class="btn icon" aria-label="Następny miesiąc">→</button>
             </div>
           </div>
           <div class="calendar-card">
-            <div class="weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+            <div class="weekdays"><span>Pon</span><span>Wt</span><span>Śr</span><span>Czw</span><span>Pt</span><span>Sob</span><span>Ndz</span></div>
             <div id="calendarGrid" class="calendar-grid"></div>
           </div>
-          <div class="subsection-head"><div><p class="section-label">NEXT UP</p><h3>Upcoming events</h3></div></div>
+          <div class="subsection-head"><div><p class="section-label">NAJBLIŻSZE TERMINY</p><h3>Nadchodzące wydarzenia</h3></div></div>
           <div id="upcomingList" class="event-list"></div>
         </section>
 
         <section id="holiday" class="tab-panel">
           <div class="toolbar">
-            <div><p class="section-label">ANNUAL LEAVE</p><h2>Holiday planner</h2></div>
-            <button id="addHolidayBtn" class="btn primary">+ Add holiday</button>
+            <div><p class="section-label">PLANOWANIE NIEOBECNOŚCI</p><h2>Urlopy zespołu</h2></div>
+            <button id="addHolidayBtn" class="btn primary">+ Dodaj urlop</button>
           </div>
           <div class="stats-grid">
-            <article class="stat-card"><span>Total holiday entries</span><strong id="holidayCount">0</strong></article>
-            <article class="stat-card"><span>Away today</span><strong id="awayToday">0</strong></article>
-            <article class="stat-card"><span>Days to next leave</span><strong id="nextLeave">—</strong></article>
+            <article class="stat-card"><div class="stat-icon">☀</div><span>Wszystkie urlopy</span><strong id="holidayCount">0</strong></article>
+            <article class="stat-card"><div class="stat-icon">◉</div><span>Nieobecni dzisiaj</span><strong id="awayToday">0</strong></article>
+            <article class="stat-card"><div class="stat-icon">→</div><span>Dni do najbliższego urlopu</span><strong id="nextLeave">—</strong></article>
           </div>
           <div class="holiday-card">
-            <div class="holiday-row holiday-header"><span>Team member</span><span>From</span><span>To</span><span>Days</span><span>Status</span><span>Actions</span></div>
+            <div class="holiday-row holiday-header"><span>Członek zespołu</span><span>Od</span><span>Do</span><span>Dni</span><span>Status</span><span>Akcje</span></div>
             <div id="holidayList"></div>
           </div>
         </section>
 
         <section id="offers" class="tab-panel">
-          <div class="toolbar">
-            <div><p class="section-label">TRAVEL IDEAS</p><h2>Holiday offers</h2></div>
-            <button id="addOfferBtn" class="btn primary">+ Add offer</button>
+          <div class="toolbar offers-toolbar">
+            <div><p class="section-label">WSPÓLNA LISTA WYJAZDÓW</p><h2>Oferty wakacyjne</h2><p class="section-description">Porównujcie kierunki, ceny i terminy. Każdy członek zespołu może dodać lub zaktualizować ofertę.</p></div>
+            <button id="addOfferBtn" class="btn primary">+ Dodaj ofertę</button>
           </div>
           <div id="offerGrid" class="offer-grid"></div>
         </section>
 
         <section id="team" class="tab-panel">
-          <div class="toolbar"><div><p class="section-label">TEAM MEMBERS</p><h2>8 people</h2></div></div>
+          <div class="toolbar"><div><p class="section-label">TEAM A</p><h2>Zespół · 8 osób</h2><p class="section-description">Jedna wspólna przestrzeń do planowania wydarzeń, urlopów i wyjazdów.</p></div></div>
           <div id="teamGrid" class="team-grid"></div>
-          <div class="info-box"><strong>Shared Team A workspace</strong><span>Everyone using the team password sees and updates the same calendar, holidays and travel offers.</span></div>
+          <div class="info-box"><div class="info-icon">✓</div><div><strong>Wspólna przestrzeń Team A</strong><span>Każda osoba posiadająca hasło widzi te same dane i może je aktualizować z telefonu lub komputera.</span></div></div>
         </section>
       </main>
     </div>
@@ -100,33 +109,33 @@
 
   <dialog id="eventDialog"><form id="eventForm">
     <input id="eventId" type="hidden">
-    <div class="dialog-head"><div><p class="section-label">CALENDAR</p><h3 id="eventDialogTitle">Add event</h3></div><button type="button" class="close" data-close="eventDialog">×</button></div>
-    <label>Event title<input id="eventTitle" required maxlength="80"></label>
-    <div class="form-grid"><label>Date<input id="eventDate" type="date" required></label><label>Time<input id="eventTime" type="time"></label></div>
-    <label>Team member<select id="eventPerson"></select></label>
-    <label>Notes<textarea id="eventNotes" rows="3" maxlength="300"></textarea></label>
-    <div class="dialog-actions"><button type="button" class="btn secondary" data-close="eventDialog">Cancel</button><button class="btn primary">Save event</button></div>
+    <div class="dialog-head"><div><p class="section-label">KALENDARZ</p><h3 id="eventDialogTitle">Dodaj wydarzenie</h3></div><button type="button" class="close" data-close="eventDialog" aria-label="Zamknij">×</button></div>
+    <label>Nazwa wydarzenia<input id="eventTitle" required maxlength="80" placeholder="np. Spotkanie Team A"></label>
+    <div class="form-grid"><label>Data<input id="eventDate" type="date" required></label><label>Godzina<input id="eventTime" type="time"></label></div>
+    <label>Dotyczy<select id="eventPerson"></select></label>
+    <label>Notatki<textarea id="eventNotes" rows="3" maxlength="300" placeholder="Opcjonalne informacje"></textarea></label>
+    <div class="dialog-actions"><button type="button" class="btn secondary" data-close="eventDialog">Anuluj</button><button class="btn primary">Zapisz wydarzenie</button></div>
   </form></dialog>
 
   <dialog id="holidayDialog"><form id="holidayForm">
     <input id="holidayId" type="hidden">
-    <div class="dialog-head"><div><p class="section-label">HOLIDAY</p><h3 id="holidayDialogTitle">Add holiday</h3></div><button type="button" class="close" data-close="holidayDialog">×</button></div>
-    <label>Team member<select id="holidayPerson" required></select></label>
-    <div class="form-grid"><label>From<input id="holidayFrom" type="date" required></label><label>To<input id="holidayTo" type="date" required></label></div>
-    <label>Note<input id="holidayNote" maxlength="100"></label>
-    <div class="dialog-actions"><button type="button" class="btn secondary" data-close="holidayDialog">Cancel</button><button class="btn primary">Save holiday</button></div>
+    <div class="dialog-head"><div><p class="section-label">URLOPY</p><h3 id="holidayDialogTitle">Dodaj urlop</h3></div><button type="button" class="close" data-close="holidayDialog" aria-label="Zamknij">×</button></div>
+    <label>Członek zespołu<select id="holidayPerson" required></select></label>
+    <div class="form-grid"><label>Od<input id="holidayFrom" type="date" required></label><label>Do<input id="holidayTo" type="date" required></label></div>
+    <label>Notatka<input id="holidayNote" maxlength="100" placeholder="Opcjonalnie"></label>
+    <div class="dialog-actions"><button type="button" class="btn secondary" data-close="holidayDialog">Anuluj</button><button class="btn primary">Zapisz urlop</button></div>
   </form></dialog>
 
   <dialog id="offerDialog"><form id="offerForm">
     <input id="offerId" type="hidden">
-    <div class="dialog-head"><div><p class="section-label">HOLIDAY OFFER</p><h3 id="offerDialogTitle">Add offer</h3></div><button type="button" class="close" data-close="offerDialog">×</button></div>
-    <div class="form-grid"><label>Country<input id="offerCountry" maxlength="60" placeholder="Spain"></label><label>Destination<input id="offerDestination" required maxlength="80" placeholder="Salou"></label></div>
-    <div class="form-grid"><label>Price / person<input id="offerPrice" type="number" min="0" step="1" placeholder="400"></label><label>Currency<select id="offerCurrency"><option>GBP</option><option>EUR</option><option>USD</option></select></label></div>
-    <div class="form-grid"><label>Departure date<input id="offerDate" type="date"></label><label>Nights<input id="offerNights" type="number" min="1" max="60" value="7"></label></div>
-    <div class="form-grid"><label>Board<input id="offerBoard" maxlength="60" placeholder="All Inclusive"></label><label>Departure airport<input id="offerAirport" maxlength="60" placeholder="Stansted"></label></div>
-    <label>Offer link<input id="offerUrl" type="url" required placeholder="https://..."></label>
-    <label>Notes<textarea id="offerNotes" rows="3" maxlength="300"></textarea></label>
-    <div class="dialog-actions"><button type="button" class="btn secondary" data-close="offerDialog">Cancel</button><button class="btn primary">Save offer</button></div>
+    <div class="dialog-head"><div><p class="section-label">OFERTA WAKACYJNA</p><h3 id="offerDialogTitle">Dodaj ofertę</h3></div><button type="button" class="close" data-close="offerDialog" aria-label="Zamknij">×</button></div>
+    <div class="form-grid"><label>Kraj<input id="offerCountry" maxlength="60" placeholder="Hiszpania"></label><label>Kierunek / miejscowość<input id="offerDestination" required maxlength="80" placeholder="Salou"></label></div>
+    <div class="form-grid"><label>Cena za osobę<input id="offerPrice" type="number" min="0" step="1" placeholder="400"></label><label>Waluta<select id="offerCurrency"><option>GBP</option><option>EUR</option><option>USD</option></select></label></div>
+    <div class="form-grid"><label>Data wylotu<input id="offerDate" type="date"></label><label>Liczba nocy<input id="offerNights" type="number" min="1" max="60" value="7"></label></div>
+    <div class="form-grid"><label>Wyżywienie<input id="offerBoard" maxlength="60" placeholder="All Inclusive"></label><label>Lotnisko wylotu<input id="offerAirport" maxlength="60" placeholder="London Stansted"></label></div>
+    <label>Link do oferty<input id="offerUrl" type="url" required placeholder="https://..."></label>
+    <label>Notatki<textarea id="offerNotes" rows="3" maxlength="300" placeholder="Hotel, pokój, dodatkowe informacje..."></textarea></label>
+    <div class="dialog-actions"><button type="button" class="btn secondary" data-close="offerDialog">Anuluj</button><button class="btn primary">Zapisz ofertę</button></div>
   </form></dialog>
 
   <div id="toast" class="toast" aria-live="polite"></div>
